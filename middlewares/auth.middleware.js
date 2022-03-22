@@ -1,4 +1,4 @@
-import handleReturn from "../asyncFunctions/handleReturn";
+import { handleReturn } from "../asyncFunctions/utilFunctions";
 
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
