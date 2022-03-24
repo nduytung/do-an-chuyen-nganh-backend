@@ -2,8 +2,6 @@ import { handleReturn } from "../asyncFunctions/utilFunctions";
 
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const express = require("express");
-const router = express.Router();
 
 dotenv.config();
 
@@ -16,7 +14,7 @@ export const userAuthenticate = async (req, res, next) => {
   try {
     jwt.verify(token, process.env.SECRET_TOKEN, (err, user) => {
       if (err) return handleReturn(res, 403, "Access token invalid", false);
-      console.log("decoded token successfully");
+      console.log("Decoded token successfully");
       req.userId = userId;
       next();
     });
