@@ -8,7 +8,7 @@ const router = express.Router();
 dotenv.config();
 
 export const userAuthenticate = async (req, res, next) => {
-  const authHeader = res.headers["Authorization"];
+  const authHeader = res.headers("Authorization");
   const token = authHeader && authHeader.split(" ")[1]; //bearer token
 
   if (!token) return handleReturn(res, 401, "Access token not found", false);
@@ -16,7 +16,8 @@ export const userAuthenticate = async (req, res, next) => {
   try {
     jwt.verify(token, process.env.SECRET_TOKEN, (err, user) => {
       if (err) return handleReturn(res, 403, "Access token invalid", false);
-      req.user = user;
+      console.log("decoded token successfully");
+      req.userId = userId;
       next();
     });
   } catch (err) {
