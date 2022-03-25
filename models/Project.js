@@ -7,6 +7,15 @@ const ProjectSchema = new Schema({
     required,
     unique,
   },
+  //type: keu goi von hay la dong gop y kien
+  type: {
+    type: Enumerator,
+    required,
+  },
+  userId: {
+    type: string,
+    required,
+  },
   //tong so tien keu goi
   goal: {
     type: Number,
@@ -17,10 +26,21 @@ const ProjectSchema = new Schema({
     type: Number,
     required,
   },
-  //so nguoi quyen gop
+  //so nguoi quyen gop, so tien quyen gop
   backer: [
     {
-      type: Number,
+      name: {
+        type: String,
+        required,
+      },
+      amount: {
+        type: String,
+        required,
+      },
+      date: {
+        type: Date,
+        required,
+      },
     },
   ],
   daysLeft: {
@@ -39,26 +59,33 @@ const ProjectSchema = new Schema({
     type: String,
     required,
   },
-  comments: [
-    {
-      type: String,
-    },
-  ],
-  starRate: {
-    type: Number,
-  },
-  rewardIds: [
-    {
-      type: String,
-    },
-  ],
 
+  //star rate se duoc tinh trung binh boi comment
+
+  update: [
+    {
+      type: String,
+    },
+  ],
   image: [
     {
       type: String,
       required,
     },
   ],
+  category: {
+    type: Enumerator,
+    required,
+  },
+  date: {
+    startTime: {
+      type: string,
+      required,
+    },
+    endTime: {
+      type: string,
+    },
+  },
 });
 
 module.exports = mongoose.Schema("projects", ProjectSchema);
