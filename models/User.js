@@ -21,6 +21,19 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
+  resetPassword: {
+    data: String, //khong phai type
+    default: "",
+  },
+  rewardList: [
+    {
+      rewardId: String,
+    },
+  ],
+  accountBalance: {
+    type: Number,
+    default: 3000,
+  },
 });
 
 module.exports = mongoose.model("users", UserSchema);

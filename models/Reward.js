@@ -14,6 +14,11 @@ const RewardSchema = new Schema({
     type: String,
     required,
   },
+  //gia toi thieu de lay dc item nay
+  minimumPrice: {
+    type: String,
+    required,
+  },
   //so luong khach hang da lay dc item
   backers: {
     type: Number,

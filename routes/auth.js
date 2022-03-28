@@ -73,4 +73,21 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.put("/reset", async (req, res) => {
+  const { email } = req.body;
+  if (!email)
+    return handleReturn(
+      res,
+      401,
+      "Bad request: please provide email to confirm"
+    );
+
+  try {
+    const user = User.findOne({ email });
+    if (!user)
+      return handleReturn(res, 404, "User email not found, please try again");
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
 module.exports = router;
