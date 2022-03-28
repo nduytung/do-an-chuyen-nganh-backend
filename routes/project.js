@@ -5,6 +5,7 @@ const { userAuthenticate } = require("../middlewares/auth.middleware");
 const Project = require("../models/Project");
 const Reward = require("../models/Reward");
 const User = require("../models/User");
+const User = require("../models/User");
 
 //CRUD
 router.get("/all", async (req, res) => {
@@ -216,6 +217,124 @@ router.post(`${id}/donate`, userAuthenticate, async (req, res) => {
       //neu nhu khong con item de tang
     }
     return handleRes(res, 200, "Donate successfully, but no items left", true);
+  } catch (err) {
+    return handleRes(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+//react project
+router.post("/react", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  if (!userId) return handleRes(res, 403, "Unauthorized");
+
+  const { type, projectId } = req.body; //type la enum, la upvote hoac downvote
+  if (!type || !projectId)
+    return handleRes(res, 401, "Please provide react type");
+
+  //neu da du tat ca cac truong
+  try {
+    const userReact =
+      type === "upvote"
+        ? await User.findOneAndUpdate(
+            {
+              _id: userId,
+            },
+            {
+              react: {
+                upvote: {
+                  $push: {
+                    projectId,
+                  },
+                },
+              },
+            }
+          )
+        : await User.findOneAndUpdate(
+            {
+              _id: userId,
+            },
+            {
+              react: {
+                downvote: {
+                  $push: {
+                    projectId,
+                  },
+                },
+              },
+            }
+          );
+
+    await userReact.save();
+
+    const projectReact =
+      type === "upvote"
+        ? await Project.findOneAndUpdate(
+            {
+              _id: projectId,
+            },
+            {
+              $inc: {
+                upvote: 1,
+              },
+            }
+          )
+        : await Project.findOneAndUpdate(
+            {
+              _id: projectId,
+            },
+            {
+              $inc: {
+                upvote: -1,
+              },
+            }
+          );
+
+    await projectReact.save();
+  } catch (err) {
+    return handleRes(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+//comment project
+router.post("/comment", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  if (!userId) return handleRes(res, 403, "User id not found");
+
+  const { comment, projectId } = req.body;
+  if (!comment || !projectId) return handleRes(res, 403, "Missing fields");
+
+  try {
+    //tim thong tin ve user comment
+    const checkUserExists = await User.findOne(
+      { _id: userId },
+      {
+        username,
+        avt,
+      }
+    );
+    if (!checkUserExists)
+      return handleRes(res, 404, "User not found, please try again");
+
+    //neu tim dc  user
+    const updateProject = await Project.findOneAndUpdate(
+      { _id: projectId },
+      {
+        $push: {
+          comment: {
+            userId,
+            commentDetail: comment,
+          },
+        },
+      }
+    );
+
+    if (!updateProject)
+      return handleRes(res, 404, "Project not found, please try again");
+
+    await updateProject.save();
+
+    //neu update thanh cong
+    return handleRes(res, 200, "Update comment successfully", true);
   } catch (err) {
     return handleRes(res, 500, `Internal server error: ${err}`);
   }

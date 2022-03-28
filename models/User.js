@@ -21,18 +21,41 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
+  avt: {
+    type: String,
+  },
   resetPassword: {
     data: String, //khong phai type
     default: "",
   },
   rewardList: [
     {
-      rewardId: String,
+      rewardId: {
+        type: String,
+      },
     },
   ],
   accountBalance: {
     type: Number,
     default: 3000,
+  },
+
+  //react cua user doi voi tung post
+  react: {
+    upvote: [
+      {
+        projectId: {
+          type: String,
+        },
+      },
+    ],
+    downvote: [
+      {
+        projectId: {
+          type: String,
+        },
+      },
+    ],
   },
 });
 

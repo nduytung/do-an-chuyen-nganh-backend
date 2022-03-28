@@ -86,6 +86,22 @@ const ProjectSchema = new Schema({
       type: string,
     },
   },
+
+  //react se chi co 1 kieu duy nhat la upvote
+  upvote: {
+    type: Number,
+    default: 0,
+  },
+  comment: [
+    {
+      userId: {
+        type: String,
+      },
+      commentDetail: {
+        type: String,
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.Schema("projects", ProjectSchema);
