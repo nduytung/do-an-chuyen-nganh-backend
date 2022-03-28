@@ -57,6 +57,22 @@ const UserSchema = new Schema({
       },
     ],
   },
+  reported: {
+    status: {
+      type: Boolean,
+      default: true,
+    },
+    excuses: [
+      {
+        userId: {
+          type: String,
+        },
+        detail: {
+          type: String,
+        },
+      },
+    ],
+  },
 });
 
 module.exports = mongoose.model("users", UserSchema);

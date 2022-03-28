@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { handleRes } = require("../asyncFunctions/utilFunctions");
+const { handleReturn } = require("../asyncFunctions/utilFunctions");
 const { userAuthenticate } = require("../middlewares/auth.middleware");
 const Project = require("../models/Project");
 const Reward = require("../models/Reward");
@@ -20,17 +20,23 @@ router.get("/all", async (req, res) => {
         category,
       }
     );
-    if (!projects) return handleRes(res, 404, "No project found", false);
+    if (!projects) return handleReturn(res, 404, "No project found", false);
 
-    return handleRes(res, 200, "Get all project successfully", true, projects);
+    return handleReturn(
+      res,
+      200,
+      "Get all project successfully",
+      true,
+      projects
+    );
   } catch (err) {
-    return handleRes(res, 500, "Internal server error: " + err, false);
+    return handleReturn(res, 500, "Internal server error: " + err, false);
   }
 });
 
 router.post("/create", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleRes(res, 400, "Forbidden: please login", false);
+  if (!userId) return handleReturn(res, 400, "Forbidden: please login", false);
 
   const data = ({
     projectName,
@@ -47,13 +53,13 @@ router.post("/create", userAuthenticate, async (req, res) => {
   } = req.body);
 
   if (!{ ...data })
-    return handleRes(res, 401, "Bad request: missing fields", false);
+    return handleReturn(res, 401, "Bad request: missing fields", false);
 
   try {
     //tim xem co bi trung ten khong
     const projectExists = await Project.findOne({ projectName });
     if (projectExists)
-      return handleRes(
+      return handleReturn(
         res,
         403,
         "Project name already exists, please try another name"
@@ -67,13 +73,14 @@ router.post("/create", userAuthenticate, async (req, res) => {
 
     await newProject.save();
   } catch (err) {
-    return handleRes(res, 500, `Internal server error : ${err}`, false);
+    return handleReturn(res, 500, `Internal server error : ${err}`, false);
   }
 });
 
 router.put("/update", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleRes(res, 400, "Forbidden: access token not found");
+  if (!userId)
+    return handleReturn(res, 400, "Forbidden: access token not found");
 
   const { projectId } = req.body;
   try {
@@ -85,10 +92,10 @@ router.put("/update", userAuthenticate, async (req, res) => {
       { returnNewDocument: true }
     );
     if (!checkExists)
-      return handleRes(res, 403, "Bad request: project not found");
-    return handleRes(res, 200, "Update project successfully", true);
+      return handleReturn(res, 403, "Bad request: project not found");
+    return handleReturn(res, 200, "Update project successfully", true);
   } catch (err) {
-    return handleRes(res, 500, `Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
@@ -96,28 +103,29 @@ router.delete("/delete", userAuthenticate, async (req, res) => {
   const { userId } = req;
   const { projectId } = req.body;
   if (!userId || !projectId)
-    return handleRes(res, 400, "Forbidden: please login");
+    return handleReturn(res, 400, "Forbidden: please login");
   try {
     const deleteProject = await Project.findOneAndDelete({ projectId });
     if (!deleteProject)
-      return handleRes(res, 404, "Project not found to be deleted!");
-    return handleRes(res, 200, "Delete project successfully", true);
+      return handleReturn(res, 404, "Project not found to be deleted!");
+    return handleReturn(res, 200, "Delete project successfully", true);
   } catch (err) {
-    return handleRes(res, 500, `Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
 //get project by id
 router.get(`/${id}`, async (req, res) => {
   const { id } = req.body;
-  if (!id) return handleRes(res, 400, "Bad request: please provide project id");
+  if (!id)
+    return handleReturn(res, 400, "Bad request: please provide project id");
 
   try {
     const checkExists = await Project.findOne({ _id: id });
-    if (!checkExists) return handleRes(res, 404, "Project ID not found");
+    if (!checkExists) return handleReturn(res, 404, "Project ID not found");
 
     //neu tim thay
-    return handleRes(
+    return handleReturn(
       res,
       200,
       "Get project detail successfully",
@@ -125,18 +133,18 @@ router.get(`/${id}`, async (req, res) => {
       checkExists
     );
   } catch (err) {
-    return handleRes(res, 500, `Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
 //donate project
 router.post(`${id}/donate`, userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleRes(res, 403, "Forbidden: please login");
+  if (!userId) return handleReturn(res, 403, "Forbidden: please login");
 
   const { donateAmount, projectId } = req.body;
   if (!donateAmount || !projectId)
-    return handleRes(res, 401, "Bad request: missing fields");
+    return handleReturn(res, 401, "Bad request: missing fields");
 
   try {
     const checkExists = await Project.findOneAndUpdate(
@@ -147,7 +155,7 @@ router.post(`${id}/donate`, userAuthenticate, async (req, res) => {
         },
       }
     );
-    if (!checkExists) return handleRes(res, 404, "Project not found");
+    if (!checkExists) return handleReturn(res, 404, "Project not found");
 
     await checkExists.save();
 
@@ -209,27 +217,32 @@ router.post(`${id}/donate`, userAuthenticate, async (req, res) => {
         }
 
         //tra ve ket qua neu co items de tang
-        return handleRes(res, 200, "Donate successfully with item", true);
+        return handleReturn(res, 200, "Donate successfully with item", true);
       } catch (err) {
-        return handleRes(res, 403, `Something happened: ${err}`);
+        return handleReturn(res, 403, `Something happened: ${err}`);
       }
 
       //neu nhu khong con item de tang
     }
-    return handleRes(res, 200, "Donate successfully, but no items left", true);
+    return handleReturn(
+      res,
+      200,
+      "Donate successfully, but no items left",
+      true
+    );
   } catch (err) {
-    return handleRes(res, 500, `Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
 //react project
 router.post("/react", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleRes(res, 403, "Unauthorized");
+  if (!userId) return handleReturn(res, 403, "Unauthorized");
 
   const { type, projectId } = req.body; //type la enum, la upvote hoac downvote
   if (!type || !projectId)
-    return handleRes(res, 401, "Please provide react type");
+    return handleReturn(res, 401, "Please provide react type");
 
   //neu da du tat ca cac truong
   try {
@@ -291,17 +304,17 @@ router.post("/react", userAuthenticate, async (req, res) => {
 
     await projectReact.save();
   } catch (err) {
-    return handleRes(res, 500, `Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
 //comment project
 router.post("/comment", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleRes(res, 403, "User id not found");
+  if (!userId) return handleReturn(res, 403, "User id not found");
 
   const { comment, projectId } = req.body;
-  if (!comment || !projectId) return handleRes(res, 403, "Missing fields");
+  if (!comment || !projectId) return handleReturn(res, 403, "Missing fields");
 
   try {
     //tim thong tin ve user comment
@@ -313,7 +326,7 @@ router.post("/comment", userAuthenticate, async (req, res) => {
       }
     );
     if (!checkUserExists)
-      return handleRes(res, 404, "User not found, please try again");
+      return handleReturn(res, 404, "User not found, please try again");
 
     //neu tim dc  user
     const updateProject = await Project.findOneAndUpdate(
@@ -330,25 +343,25 @@ router.post("/comment", userAuthenticate, async (req, res) => {
     );
 
     if (!updateProject)
-      return handleRes(res, 404, "Project not found, please try again");
+      return handleReturn(res, 404, "Project not found, please try again");
 
     await updateProject.save();
 
     //neu update thanh cong
-    return handleRes(res, 200, "Update comment successfully", true);
+    return handleReturn(res, 200, "Update comment successfully", true);
   } catch (err) {
-    return handleRes(res, 500, `Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
 //update tien do project
 router.post("/update/progress", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleRes(res, 403, "User id not found");
+  if (!userId) return handleReturn(res, 403, "User id not found");
 
   const { title, content, projectId } = req.body;
   if (!title || !content || !projectId)
-    return handleRes(res, 401, "Missing fields");
+    return handleReturn(res, 401, "Missing fields");
 
   try {
     //kiem tra xem nguoi dung nay co pahi chu project khong
@@ -371,10 +384,34 @@ router.post("/update/progress", userAuthenticate, async (req, res) => {
 
     await updateProject.save();
 
-    if (!updateProject) return handleRes(res, 404, "Project not found");
+    if (!updateProject) return handleReturn(res, 404, "Project not found");
 
-    return handleRes(res, 200, "Update project progress successfully", true);
+    return handleReturn(res, 200, "Update project progress successfully", true);
   } catch (err) {
-    return handleRes(res, 500`Internal server error: ${err}`);
+    return handleReturn(res, 500`Internal server error: ${err}`);
+  }
+});
+
+router.get("/reported", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  if (!userId) return handleReturn(res, 403, "User id not found");
+
+  try {
+    const reportedProjects = await Project.find(
+      { reported: { status: true } },
+      {
+        _id,
+        projectName,
+        userId,
+        reported: { excuses },
+      }
+    );
+
+    if (!reportedProjects)
+      return handleReturn(res, 404, "No reported project found");
+
+    return reportedProjects;
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });

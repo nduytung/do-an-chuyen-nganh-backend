@@ -126,6 +126,23 @@ const ProjectSchema = new Schema({
       },
     },
   ],
+
+  reported: {
+    status: {
+      type: Boolean,
+      default: true,
+    },
+    excuses: [
+      {
+        userId: {
+          type: String,
+        },
+        detail: {
+          type: String,
+        },
+      },
+    ],
+  },
 });
 
 module.exports = mongoose.Schema("projects", ProjectSchema);

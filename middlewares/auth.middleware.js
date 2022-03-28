@@ -1,11 +1,11 @@
-import { handleReturn } from "../asyncFunctions/utilFunctions";
+const handleReturn = require("../asyncFunctions/utilFunctions");
 
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-export const userAuthenticate = async (req, res, next) => {
+userAuthenticate = async (req, res, next) => {
   const authHeader = res.headers("Authorization");
   const token = authHeader && authHeader.split(" ")[1]; //bearer token
 
@@ -22,3 +22,5 @@ export const userAuthenticate = async (req, res, next) => {
     return handleReturn(res, 500, `Internal server error: ${err}`, false);
   }
 };
+
+module.exports = userAuthenticate;
