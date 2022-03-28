@@ -73,6 +73,13 @@ const UserSchema = new Schema({
       },
     ],
   },
+  remindList: [
+    {
+      projectId: {
+        type: String,
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.model("users", UserSchema);

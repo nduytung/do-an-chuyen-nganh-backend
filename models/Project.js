@@ -4,60 +4,60 @@ const Schema = mongoose.Schema;
 const ProjectSchema = new Schema({
   projectName: {
     type: String,
-    required,
-    unique,
+    required: true,
+    unique: true,
   },
   //type: keu goi von hay la dong gop y kien
   type: {
-    type: Enumerator,
-    required,
+    type: String,
+    required: true,
   },
   userId: {
-    type: string,
-    required,
+    type: String,
+    required: true,
   },
   //tong so tien keu goi
   goal: {
     type: Number,
-    required,
+    required: true,
   },
   //so tien da keu goi dc
   raised: {
     type: Number,
-    required,
+    required: true,
   },
   //so nguoi quyen gop, so tien quyen gop
   backer: [
     {
       name: {
         type: String,
-        required,
+        required: true,
       },
       amount: {
         type: String,
-        required,
+        required: true,
       },
       date: {
         type: Date,
-        required,
+        required: true,
       },
     },
   ],
   daysLeft: {
     type: Date,
-    required,
+    required: true,
   },
   shortStory: {
     type: String,
-    required,
+    required: true,
   },
   authorId: {
     type: String,
-    required,
+    required: true,
   },
   fullStory: {
     type: String,
-    required,
+    required: true,
   },
 
   //star rate se duoc tinh trung binh boi comment
@@ -70,20 +70,20 @@ const ProjectSchema = new Schema({
   image: [
     {
       type: String,
-      required,
+      required: true,
     },
   ],
   category: {
-    type: Enumerator,
-    required,
+    type: String,
+    required: true,
   },
   date: {
     startTime: {
-      type: string,
-      required,
+      type: String,
+      required: true,
     },
     endTime: {
-      type: string,
+      type: String,
     },
   },
 
@@ -96,15 +96,15 @@ const ProjectSchema = new Schema({
     {
       userId: {
         type: String,
-        required,
+        required: true,
       },
       commentDetail: {
         type: String,
-        required,
+        required: true,
       },
       time: {
         type: String,
-        required,
+        required: true,
       },
     },
   ],
@@ -114,15 +114,15 @@ const ProjectSchema = new Schema({
     {
       title: {
         type: String,
-        required,
+        required: true,
       },
       content: {
         type: String,
-        required,
+        required: true,
       },
       time: {
         type: String,
-        required,
+        required: true,
       },
     },
   ],
@@ -145,4 +145,4 @@ const ProjectSchema = new Schema({
   },
 });
 
-module.exports = mongoose.Schema("projects", ProjectSchema);
+module.exports = mongoose.model("projects", ProjectSchema);

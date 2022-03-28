@@ -105,7 +105,7 @@ router.delete("/delete", userAuthenticate, async (req, res) => {
   if (!userId || !projectId)
     return handleReturn(res, 400, "Forbidden: please login");
   try {
-    const deleteProject = await Project.findOneAndDelete({ projectId });
+    const deleteProject = await Project.findOneAndDelete({ _id: projectId });
     if (!deleteProject)
       return handleReturn(res, 404, "Project not found to be deleted!");
     return handleReturn(res, 200, "Delete project successfully", true);
@@ -115,8 +115,8 @@ router.delete("/delete", userAuthenticate, async (req, res) => {
 });
 
 //get project by id
-router.get(`/${id}`, async (req, res) => {
-  const { id } = req.body;
+router.get(`:id`, async (req, res) => {
+  const { id } = req.params.id;
   if (!id)
     return handleReturn(res, 400, "Bad request: please provide project id");
 
@@ -138,7 +138,7 @@ router.get(`/${id}`, async (req, res) => {
 });
 
 //donate project
-router.post(`${id}/donate`, userAuthenticate, async (req, res) => {
+router.post(`:id/donate`, userAuthenticate, async (req, res) => {
   const { userId } = req;
   if (!userId) return handleReturn(res, 403, "Forbidden: please login");
 
@@ -392,7 +392,7 @@ router.post("/update/progress", userAuthenticate, async (req, res) => {
   }
 });
 
-router.get("/reported", userAuthenticate, async (req, res) => {
+router.get("/admin/reported", userAuthenticate, async (req, res) => {
   const { userId } = req;
   if (!userId) return handleReturn(res, 403, "User id not found");
 
@@ -411,6 +411,63 @@ router.get("/reported", userAuthenticate, async (req, res) => {
       return handleReturn(res, 404, "No reported project found");
 
     return reportedProjects;
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+router.post(`/:id/report`, userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  if (!userId) return handleReturn(res, 403, "Unauthorized: user id not found");
+
+  const { id } = req.params.id;
+  const { detail } = req.body;
+  if (!detail)
+    return handleReturn(res, 401, "Missing field: missing detail field");
+
+  try {
+    const reportProject = await Project.findOneAndUpdate(
+      { _id: id },
+      {
+        reported: {
+          status: true,
+          $push: {
+            excuses: {
+              userId,
+              detail,
+            },
+          },
+        },
+      }
+    );
+    if (!reportProject) return handleReturn(res, 404, "Project not found");
+
+    return handleReturn(res, 200, "Report project successfully", true);
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+router.post("/:id/remind-list", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  const { id } = req.params.id;
+  if (!userId) return handleReturn(res, 403, "Unauthorized: user id not found");
+
+  try {
+    const addRemindList = await User.findOne(
+      { _id: userId },
+      {
+        $push: {
+          remindList: {
+            projectId: id,
+          },
+        },
+      }
+    );
+    if (!addRemindList)
+      return handleReturn(res, 404, "User not found, please try again");
+
+    return handleReturn(res, 200, "Add to remind list successfully", true);
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
