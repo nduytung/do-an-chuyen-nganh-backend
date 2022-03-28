@@ -241,8 +241,8 @@ router.post("/react", userAuthenticate, async (req, res) => {
             },
             {
               react: {
-                upvote: {
-                  $push: {
+                $push: {
+                  upvote: {
                     projectId,
                   },
                 },
@@ -255,8 +255,8 @@ router.post("/react", userAuthenticate, async (req, res) => {
             },
             {
               react: {
-                downvote: {
-                  $push: {
+                $push: {
+                  downvote: {
                     projectId,
                   },
                 },
@@ -323,6 +323,7 @@ router.post("/comment", userAuthenticate, async (req, res) => {
           comment: {
             userId,
             commentDetail: comment,
+            time: new Date("<YYYY-mm-dd>"),
           },
         },
       }
@@ -337,5 +338,43 @@ router.post("/comment", userAuthenticate, async (req, res) => {
     return handleRes(res, 200, "Update comment successfully", true);
   } catch (err) {
     return handleRes(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+//update tien do project
+router.post("/update/progress", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  if (!userId) return handleRes(res, 403, "User id not found");
+
+  const { title, content, projectId } = req.body;
+  if (!title || !content || !projectId)
+    return handleRes(res, 401, "Missing fields");
+
+  try {
+    //kiem tra xem nguoi dung nay co pahi chu project khong
+    //kiem tra xem project nay co ton tai khong
+    const updateProject = await Project.findOneAndUpdate(
+      {
+        userId,
+        projectId,
+      },
+      {
+        $push: {
+          updatePath: {
+            title,
+            content,
+            time: new Date("<YYYY-mm-dd>"),
+          },
+        },
+      }
+    );
+
+    await updateProject.save();
+
+    if (!updateProject) return handleRes(res, 404, "Project not found");
+
+    return handleRes(res, 200, "Update project progress successfully", true);
+  } catch (err) {
+    return handleRes(res, 500`Internal server error: ${err}`);
   }
 });

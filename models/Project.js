@@ -96,9 +96,33 @@ const ProjectSchema = new Schema({
     {
       userId: {
         type: String,
+        required,
       },
       commentDetail: {
         type: String,
+        required,
+      },
+      time: {
+        type: String,
+        required,
+      },
+    },
+  ],
+
+  //cap nhat tien do
+  updatePath: [
+    {
+      title: {
+        type: String,
+        required,
+      },
+      content: {
+        type: String,
+        required,
+      },
+      time: {
+        type: String,
+        required,
       },
     },
   ],
