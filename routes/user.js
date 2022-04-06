@@ -1,9 +1,9 @@
 var express = require("express");
-const { handleReturn } = require("../asyncFunctions/utilFunctions");
+const router = express.Router();
+const handleReturn = require("../asyncFunctions/utilFunctions");
 const userAuthenticate = require("../middlewares/auth.middleware");
 const Project = require("../models/Project");
 const User = require("../models/User");
-var router = express.Router();
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
@@ -11,15 +11,11 @@ router.get("/", function (req, res, next) {
 });
 
 router.get("/info/:id", async (req, res) => {
-  const { userId } = req.body;
-  const { id } = req.params.id;
-
-  if (!userId) return handleReturn(res, 403, "Missing fields");
-
+  const { id } = req.params;
   try {
     const userInfo = await User.findOne(
       { _id: id },
-      { username, fullname, email, avt, rewardList }
+      { username: 1, fullname: 1, email: 1, avt: 1, rewardList: 1 }
     );
 
     if (!userInfo) return handleReturn(res, 404, "User profile not found");
@@ -97,7 +93,7 @@ router.get("/rewards/:id", userAuthenticate, async (req, res) => {
     const userReward = await User.findOne(
       { _id: id },
       {
-        rewardList,
+        rewardList: 1,
       }
     );
 
@@ -118,22 +114,25 @@ router.get("/remind-list", userAuthenticate, async (req, res) => {
     const remindList = await User.findOne(
       { _id: userId },
       {
-        remindList,
+        remindList: 1,
       }
     );
     if (!remindList) return handleReturn(res, 404, "Remind list not found");
-
-    const remindListDetail = remindList.map(async (item) => {
-      return await Project.findOne(
-        { _id: item.projectId },
-        { projectName, category, raised, goal, daysLeft }
-      );
-    });
+    const remindListDetail = await Promise.all(
+      remindList.remindList.map(async (item) => {
+        return await Project.findOne(
+          { _id: item.projectId },
+          { projectName: 1, category: 1, raised: 1, goal: 1, daysLeft: 1 }
+        );
+      })
+    );
 
     if (!remindListDetail)
       return handleReturn(res, 404, "Remind item not found");
 
-    return handleReturn(res, 200, "Get user remind list successfully", true);
+    return handleReturn(res, 200, "Get user remind list successfully", true, {
+      remindListDetail,
+    });
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }

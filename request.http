@@ -1,23 +1,131 @@
-
-POST http://localhost:4000/auth/login 
-Content-Type: application/json
-
-{
-    "username" : "nduytung",
-    "password": "1611"
-}
-
-###
 POST http://localhost:4000/auth/register
 Content-Type: application/json
 
 {
-    "username":"nduytung3",
-    "email":"nduytung.1611@gmail.com",
-    "password":"1611",
-    "fullname": "Nguyen Duy Tung"
+    "username": "nduytung",
+    "email":"nduytung@gmail.com",
+    "fullname": "Nguyen Duy Tung",
+    "password":"1611"
 }
 
 ###
-GET http://localhost:4000/users/reported
+POST http://localhost:4000/auth/login 
+Content-Type: application/json
+
+{
+    "username": "nduytung",
+    "password": "1611"
+}
+
+//ACCESS TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDg2MDQ4MjV9.vsQpzPnF9UcpqGXFupXk_fvmZntgd5ciS7xjK6PqZsY
+###
+GET http://localhost:4000/project/all
+
+###
+POST http://localhost:4000/project/create
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "type": "vote",
+    "projectName":"testing project 02",
+    "goal": 4000,
+    "raised":200,
+    "daysLeft":20,
+    "shortStory":"this is a short story",
+    "authorId": "6243b66281c949b53fs95f968",
+    "fullStory":"this is the full story version",
+    "image":"no image found",
+    "category":"Science",
+    "date": {
+        "startTime":"2022-11-09"
+    }
+}
+
+###
+DELETE http://localhost:4000/project/delete 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "projectId": "62446597ad5a3c5ecf28d537"
+}
+
+###
+PUT http://localhost:4000/project/update 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "projectId": "62446597ad5a3c5ecf28d537",
+    "image": "no image but descripted"
+}
+
+###
+GET http://localhost:4000/users/info/6243b66281c949b53f95f968
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+
+###
+GET http://localhost:4000/project/detail/624466b6c309989c586f3392
+
+###
+PUT http://localhost:4000/project/donate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "id":"624466b6c309989c586f3392",
+    "donateAmount" :200
+}
+
+###
+
+POST http://localhost:4000/project/react
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "id":"624466b6c309989c586f3392",
+    "type":"downvote"
+}
+
+###
+POST http://localhost:4000/project/comment
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "id":"624466b6c309989c586f3392",
+    "comment":"this is just a testing comment"
+}
+
+###
+POST http://localhost:4000/project/update/progress
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "title":"this is update number #1",
+    "projectId":"624466b6c309989c586f3392",
+    "content":"content for update number 1, just a testing message"
+}
+
+
+###
+POST http://localhost:4000/project/add/remind-list
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+{
+    "id":"624466b6c309989c586f3392"
+}
+
+###
+GET http://localhost:4000/users/remind-list
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
+Content-Type: application/json
+
+###
+GET http://localhost:4000/users/rewards/6243b66281c949b53f95f968
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjQzYjY2MjgxYzk0OWI1M2Y5NWY5NjgiLCJpYXQiOjE2NDg2MDg3OTd9.R0FrOV1qIKoP2pNbw6DKA1RwphjtY7lcX7J7VKTricU
 Content-Type: application/json

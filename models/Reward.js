@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const RewardSchema = new Schema({
   rewardName: {
     type: String,
-    required,
+    required: true,
   },
   projectId: {
     type: String,
@@ -12,22 +12,23 @@ const RewardSchema = new Schema({
   },
   image: {
     type: String,
-    required,
+    required: true,
   },
   //gia toi thieu de lay dc item nay
   minimumPrice: {
     type: String,
-    required,
+    required: true,
   },
   //so luong khach hang da lay dc item
   backers: {
     type: Number,
+    default: 0,
   },
   //so luong tong cong item co
   quantity: {
     type: Number,
-    required,
+    required: true,
   },
 });
 
-module.exports = mongoose.Schema("rewards", RewardSchema);
+module.exports = mongoose.model("rewards", RewardSchema);

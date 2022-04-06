@@ -8,4 +8,4 @@ const handleReturn = (
   return res.status(status).json({ message, success, props });
 };
 
-module.exports = { handleReturn };
+module.exports = handleReturn;

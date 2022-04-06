@@ -5,11 +5,31 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const cors = require("cors");
 const authRouter = require("./routes/auth");
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/user");
+const projectRouter = require("./routes/project");
+const usersRouter = require("./routes/user");
 const connectDB = require("./asyncFunctions/connectDB");
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 var app = express();
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      version: "1.1.1",
+      title: "Kick Starter API",
+      description: "Kick Starter Documentation",
+      contact: {
+        name: "Duy Tung",
+      },
+      servers: ["http://localhost:4000"],
+    },
+  },
+  apis: ["app.js", "./routes/project.js"],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 connectDB();
 // view engine setup
@@ -23,7 +43,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
 
-app.use("/", indexRouter);
+app.use("/project", projectRouter);
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 

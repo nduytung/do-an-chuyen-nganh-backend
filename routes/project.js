@@ -1,23 +1,32 @@
 const express = require("express");
 const router = express.Router();
-const { handleReturn } = require("../asyncFunctions/utilFunctions");
-const { userAuthenticate } = require("../middlewares/auth.middleware");
+const handleReturn = require("../asyncFunctions/utilFunctions");
+const userAuthenticate = require("../middlewares/auth.middleware");
 const Project = require("../models/Project");
 const Reward = require("../models/Reward");
 const User = require("../models/User");
-const User = require("../models/User");
 
+/**
+ * @swagger
+ * paths:
+ *  /all:
+ *   get:
+ *      description: Use to request all customers
+ *      responses:
+ *        "200":
+ *         description: A successful response
+ */
 //CRUD
 router.get("/all", async (req, res) => {
   try {
     const projects = await Project.find(
       {},
       {
-        projectName,
-        userId,
-        daysLeft,
-        image,
-        category,
+        projectName: 1,
+        userId: 1,
+        daysLeft: 1,
+        image: 1,
+        category: 1,
       }
     );
     if (!projects) return handleReturn(res, 404, "No project found", false);
@@ -36,9 +45,7 @@ router.get("/all", async (req, res) => {
 
 router.post("/create", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleReturn(res, 400, "Forbidden: please login", false);
-
-  const data = ({
+  const {
     projectName,
     type,
     goal,
@@ -50,11 +57,10 @@ router.post("/create", userAuthenticate, async (req, res) => {
     image,
     category,
     date,
-  } = req.body);
+  } = req.body;
 
-  if (!{ ...data })
-    return handleReturn(res, 401, "Bad request: missing fields", false);
-
+  if (type == "")
+    return handleReturn(res, 403, "Bad request: type must be vote or raise");
   try {
     //tim xem co bi trung ten khong
     const projectExists = await Project.findOne({ projectName });
@@ -67,12 +73,14 @@ router.post("/create", userAuthenticate, async (req, res) => {
 
     //neu khong trung ten thi cho tao va luu lai
     const newProject = await new Project({
-      ...data,
+      ...req.body,
       userId,
     });
 
     await newProject.save();
+    return handleReturn(res, 200, "Create new project successfully", true);
   } catch (err) {
+    console.log("Err : " + err);
     return handleReturn(res, 500, `Internal server error : ${err}`, false);
   }
 });
@@ -83,17 +91,31 @@ router.put("/update", userAuthenticate, async (req, res) => {
     return handleReturn(res, 400, "Forbidden: access token not found");
 
   const { projectId } = req.body;
+
+  //check project owner
+  const projectOwner = await Project.findOne({
+    $and: [{ _id: projectId }, { userId }],
+  });
+  if (!projectOwner)
+    return handleReturn(
+      res,
+      403,
+      "Forbidden: You are not allow to modify project"
+    );
+
   try {
-    const checkExists = await Project.findOneAndUpdate(
+    const updatedProject = await Project.findOneAndUpdate(
       { projectId },
       {
         ...req.body,
       },
       { returnNewDocument: true }
     );
-    if (!checkExists)
+    if (!updatedProject)
       return handleReturn(res, 403, "Bad request: project not found");
-    return handleReturn(res, 200, "Update project successfully", true);
+    return handleReturn(res, 200, "Update project successfully", true, {
+      updatedProject,
+    });
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
@@ -104,6 +126,18 @@ router.delete("/delete", userAuthenticate, async (req, res) => {
   const { projectId } = req.body;
   if (!userId || !projectId)
     return handleReturn(res, 400, "Forbidden: please login");
+
+  //check project owner
+  const projectOwner = await Project.findOne({
+    $and: [{ _id: projectId }, { userId }],
+  });
+  if (!projectOwner)
+    return handleReturn(
+      res,
+      403,
+      "Forbidden: You are not allow to modify project"
+    );
+
   try {
     const deleteProject = await Project.findOneAndDelete({ _id: projectId });
     if (!deleteProject)
@@ -115,8 +149,8 @@ router.delete("/delete", userAuthenticate, async (req, res) => {
 });
 
 //get project by id
-router.get(`:id`, async (req, res) => {
-  const { id } = req.params.id;
+router.get(`/detail/:id`, async (req, res) => {
+  const { id } = req.params;
   if (!id)
     return handleReturn(res, 400, "Bad request: please provide project id");
 
@@ -138,17 +172,19 @@ router.get(`:id`, async (req, res) => {
 });
 
 //donate project
-router.post(`:id/donate`, userAuthenticate, async (req, res) => {
+router.put(`/donate`, userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleReturn(res, 403, "Forbidden: please login");
+  const { id } = req.body;
 
-  const { donateAmount, projectId } = req.body;
-  if (!donateAmount || !projectId)
+  if (!userId || !id) return handleReturn(res, 403, "Forbidden: please login");
+
+  const { donateAmount } = req.body;
+  if (!donateAmount)
     return handleReturn(res, 401, "Bad request: missing fields");
 
   try {
     const checkExists = await Project.findOneAndUpdate(
-      { _id: projectId },
+      { _id: id },
       {
         $inc: {
           raised: parseInt(donateAmount),
@@ -172,19 +208,22 @@ router.post(`:id/donate`, userAuthenticate, async (req, res) => {
     //kiem item xem cai nao thoa dieu kien, va lieu con hang khong
     const findReceivedItem = await Reward.find({
       $and: [
-        ({
+        {
+          projectId: id,
+        },
+        {
           minimumPrice: { $lt: donateAmount },
         },
         {
           quantity: { $gt: 0 },
-        }),
+        },
       ],
     })
       .sort({ minimumPrice: -1 })
       .limit(1);
 
     //neu nhu du tien de nhan item va item do con hang
-    if (findReceivedItem) {
+    if (findReceivedItem === true) {
       try {
         //them vao items list va tru di tien trong tai khoan
         const updateUserItems = await User.findOneAndUpdate(
@@ -238,11 +277,12 @@ router.post(`:id/donate`, userAuthenticate, async (req, res) => {
 //react project
 router.post("/react", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleReturn(res, 403, "Unauthorized");
+  const { type, id } = req.body; //type la enum, la upvote hoac downvote
 
-  const { type, projectId } = req.body; //type la enum, la upvote hoac downvote
-  if (!type || !projectId)
-    return handleReturn(res, 401, "Please provide react type");
+  if (!id) return handleReturn(res, 401, "Missing project id");
+  if (!userId) return handleReturn(res, 403, "Unauthorized");
+  if (!type || (type !== "upvote" && type !== "downvote"))
+    return handleReturn(res, 401, "Please provide exact react type");
 
   //neu da du tat ca cac truong
   try {
@@ -255,9 +295,7 @@ router.post("/react", userAuthenticate, async (req, res) => {
             {
               react: {
                 $push: {
-                  upvote: {
-                    projectId,
-                  },
+                  upvote: id,
                 },
               },
             }
@@ -269,21 +307,21 @@ router.post("/react", userAuthenticate, async (req, res) => {
             {
               react: {
                 $push: {
-                  downvote: {
-                    projectId,
-                  },
+                  downvote: id,
                 },
               },
             }
           );
 
+    if (!userReact)
+      return handleReturn(res, 404, "User id not found, please try again");
     await userReact.save();
 
     const projectReact =
       type === "upvote"
         ? await Project.findOneAndUpdate(
             {
-              _id: projectId,
+              _id: id,
             },
             {
               $inc: {
@@ -293,7 +331,7 @@ router.post("/react", userAuthenticate, async (req, res) => {
           )
         : await Project.findOneAndUpdate(
             {
-              _id: projectId,
+              _id: id,
             },
             {
               $inc: {
@@ -302,7 +340,11 @@ router.post("/react", userAuthenticate, async (req, res) => {
             }
           );
 
+    if (!projectReact)
+      return handleReturn(res, 404, "Project id not found, please try again");
     await projectReact.save();
+
+    return handleReturn(res, 200, "Update vote successfully on both", true);
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
@@ -311,26 +353,20 @@ router.post("/react", userAuthenticate, async (req, res) => {
 //comment project
 router.post("/comment", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleReturn(res, 403, "User id not found");
+  const { comment, id } = req.body;
 
-  const { comment, projectId } = req.body;
-  if (!comment || !projectId) return handleReturn(res, 403, "Missing fields");
+  if (!userId) return handleReturn(res, 403, "User id not found");
+  if (!comment || !id) return handleReturn(res, 403, "Missing fields");
 
   try {
     //tim thong tin ve user comment
-    const checkUserExists = await User.findOne(
-      { _id: userId },
-      {
-        username,
-        avt,
-      }
-    );
+    const checkUserExists = await User.findOne({ _id: userId });
     if (!checkUserExists)
       return handleReturn(res, 404, "User not found, please try again");
 
     //neu tim dc  user
     const updateProject = await Project.findOneAndUpdate(
-      { _id: projectId },
+      { _id: id },
       {
         $push: {
           comment: {
@@ -368,8 +404,14 @@ router.post("/update/progress", userAuthenticate, async (req, res) => {
     //kiem tra xem project nay co ton tai khong
     const updateProject = await Project.findOneAndUpdate(
       {
-        userId,
-        projectId,
+        $and: [
+          {
+            userId,
+          },
+          {
+            _id: projectId,
+          },
+        ],
       },
       {
         $push: {
@@ -384,11 +426,16 @@ router.post("/update/progress", userAuthenticate, async (req, res) => {
 
     await updateProject.save();
 
-    if (!updateProject) return handleReturn(res, 404, "Project not found");
+    if (!updateProject)
+      return handleReturn(
+        res,
+        404,
+        "Project not found, or you are not allow to modify project"
+      );
 
     return handleReturn(res, 200, "Update project progress successfully", true);
   } catch (err) {
-    return handleReturn(res, 500`Internal server error: ${err}`);
+    return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
 
@@ -448,13 +495,17 @@ router.post(`/:id/report`, userAuthenticate, async (req, res) => {
   }
 });
 
-router.post("/:id/remind-list", userAuthenticate, async (req, res) => {
+router.post("/add/remind-list", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  const { id } = req.params.id;
+  const { id } = req.body;
   if (!userId) return handleReturn(res, 403, "Unauthorized: user id not found");
+  if (!id)
+    return handleReturn(res, 401, "Project id not provided, please try again");
 
   try {
-    const addRemindList = await User.findOne(
+    //tim xem co ton tai chua
+
+    const addRemindList = await User.findOneAndUpdate(
       { _id: userId },
       {
         $push: {
@@ -472,3 +523,5 @@ router.post("/:id/remind-list", userAuthenticate, async (req, res) => {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
 });
+
+module.exports = router;

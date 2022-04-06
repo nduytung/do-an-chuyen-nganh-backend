@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const uniqueValidator = require("mongoose-unique-validator");
 
 const ProjectSchema = new Schema({
   projectName: {
@@ -7,7 +8,7 @@ const ProjectSchema = new Schema({
     required: true,
     unique: true,
   },
-  //type: keu goi von hay la dong gop y kien
+  //type: keu goi von hay la dong gop y kien: vote, raise
   type: {
     type: String,
     required: true,
@@ -62,11 +63,6 @@ const ProjectSchema = new Schema({
 
   //star rate se duoc tinh trung binh boi comment
 
-  update: [
-    {
-      type: String,
-    },
-  ],
   image: [
     {
       type: String,
@@ -92,6 +88,7 @@ const ProjectSchema = new Schema({
     type: Number,
     default: 0,
   },
+
   comment: [
     {
       userId: {
@@ -115,6 +112,7 @@ const ProjectSchema = new Schema({
       title: {
         type: String,
         required: true,
+        unique: true,
       },
       content: {
         type: String,
@@ -144,5 +142,7 @@ const ProjectSchema = new Schema({
     ],
   },
 });
+
+ProjectSchema.plugin(uniqueValidator);
 
 module.exports = mongoose.model("projects", ProjectSchema);

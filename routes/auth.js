@@ -1,8 +1,5 @@
 const express = require("express");
-const {
-  verifyFields,
-  handleReturn,
-} = require("../asyncFunctions/utilFunctions");
+const handleReturn = require("../asyncFunctions/utilFunctions");
 const router = express.Router();
 const argon2 = require("argon2");
 const User = require("../models/User");
@@ -62,7 +59,7 @@ router.post("/login", async (req, res) => {
 
     const accessToken = jwt.sign(
       {
-        userId: username._id,
+        userId: existUser._id,
       },
       process.env.SECRET_TOKEN
     );
@@ -86,6 +83,10 @@ router.put("/reset", async (req, res) => {
     const user = User.findOne({ email });
     if (!user)
       return handleReturn(res, 404, "User email not found, please try again");
+
+    /* neu da day du tat ca truowng:
+    - gui kem theo mot chuoi bam, chuoi bam nay se duoc bam tu 
+    */
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
