@@ -13,10 +13,7 @@ const ProjectSchema = new Schema({
     type: String,
     required: true,
   },
-  userId: {
-    type: String,
-    required: true,
-  },
+
   //tong so tien keu goi
   goal: {
     type: Number,

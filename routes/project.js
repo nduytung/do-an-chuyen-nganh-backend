@@ -155,7 +155,22 @@ router.get(`/detail/:id`, async (req, res) => {
     return handleReturn(res, 400, "Bad request: please provide project id");
 
   try {
-    const checkExists = await Project.findOne({ _id: id });
+    const checkExists = await Project.findOne(
+      { _id: id },
+      {
+        projectName: 1,
+        type: 1,
+        authorId: 1,
+        goal: 1,
+        raised: 1,
+        daysLeft: 1,
+        shortStory: 1,
+        fullStory: 1,
+        category: 1,
+        date: 1,
+        upvote: 1,
+      }
+    );
     if (!checkExists) return handleReturn(res, 404, "Project ID not found");
 
     //neu tim thay
@@ -351,7 +366,7 @@ router.post("/react", userAuthenticate, async (req, res) => {
 });
 
 //comment project
-router.post("/comment", userAuthenticate, async (req, res) => {
+router.put("/comment", userAuthenticate, async (req, res) => {
   const { userId } = req;
   const { comment, id } = req.body;
 
@@ -372,19 +387,42 @@ router.post("/comment", userAuthenticate, async (req, res) => {
           comment: {
             userId,
             commentDetail: comment,
-            time: new Date("<YYYY-mm-dd>"),
+            time: new Date().toISOString().split("T")[0],
           },
         },
       }
     );
 
+    console.log(updateProject);
+
     if (!updateProject)
       return handleReturn(res, 404, "Project not found, please try again");
 
-    await updateProject.save();
+    console.log("came here");
 
     //neu update thanh cong
     return handleReturn(res, 200, "Update comment successfully", true);
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+router.get("/comment/all/:projectId", async (req, res) => {
+  const { projectId } = req.params;
+  if (!projectId)
+    return handleReturn(res, 400, "Bad request: missing project ID");
+
+  try {
+    const commentList = await Project.findOne(
+      { _id: projectId },
+      { comment: 1 }
+    );
+    if (!commentList)
+      return handleReturn(res, 404, "Project comment not found");
+
+    return handleReturn(res, 200, "Get comment list successfully", true, {
+      commentList,
+    });
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
@@ -467,7 +505,7 @@ router.post(`/:id/report`, userAuthenticate, async (req, res) => {
   const { userId } = req;
   if (!userId) return handleReturn(res, 403, "Unauthorized: user id not found");
 
-  const { id } = req.params.id;
+  const { id } = req.params;
   const { detail } = req.body;
   if (!detail)
     return handleReturn(res, 401, "Missing field: missing detail field");
