@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
       },
       process.env.SECRET_TOKEN
     );
-    return handleReturn(res, 403, "Create account successfully", true, token);
+    return handleReturn(res, 200, "Create account successfully", true, token);
   } catch (err) {
     return handleReturn(res, 500, `Internal server error ${err}`, false);
   }
@@ -44,7 +44,10 @@ router.post("/login", async (req, res) => {
   if (!username || !password)
     return handleReturn(res, 401, "Missing fields", false);
   try {
-    const existUser = await User.findOne({ username }, { fullname: 1 });
+    const existUser = await User.findOne(
+      { username },
+      { _id: 1, fullname: 1, username: 1, password: 1 }
+    );
     if (!existUser)
       return handleReturn(
         res,
@@ -52,6 +55,9 @@ router.post("/login", async (req, res) => {
         "Username not found, please try again",
         false
       );
+
+    console.log(existUser.password);
+    console.log(password);
 
     const validPassword = argon2.verify(existUser.password, password);
     if (!validPassword)
@@ -64,9 +70,12 @@ router.post("/login", async (req, res) => {
       process.env.SECRET_TOKEN
     );
 
+    console.log(accessToken);
+
     return handleReturn(res, 200, "Login successfully", true, {
       token: accessToken,
       fullname: existUser.fullname,
+      username: existUser.username,
     });
   } catch (err) {
     return handleReturn(res, 500, "Internal server error: " + err);

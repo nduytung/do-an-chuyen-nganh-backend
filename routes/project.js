@@ -375,7 +375,10 @@ router.put("/comment", userAuthenticate, async (req, res) => {
 
   try {
     //tim thong tin ve user comment
-    const checkUserExists = await User.findOne({ _id: userId });
+    const checkUserExists = await User.findOne(
+      { _id: userId },
+      { username: 1 }
+    );
     if (!checkUserExists)
       return handleReturn(res, 404, "User not found, please try again");
 
@@ -385,7 +388,7 @@ router.put("/comment", userAuthenticate, async (req, res) => {
       {
         $push: {
           comment: {
-            userId,
+            username: checkUserExists.username,
             commentDetail: comment,
             time: new Date().toISOString().split("T")[0],
           },

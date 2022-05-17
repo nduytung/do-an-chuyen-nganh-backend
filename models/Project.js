@@ -88,7 +88,7 @@ const ProjectSchema = new Schema({
 
   comment: [
     {
-      userId: {
+      username: {
         type: String,
         required: true,
       },
