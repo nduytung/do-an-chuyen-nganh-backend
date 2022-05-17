@@ -46,7 +46,9 @@ app.use(cors());
 app.use("/project", projectRouter);
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
-
+app.use("/", (req, res) => {
+  res.send("Hello, this is our backend - overwritten by Duy Tung");
+});
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

@@ -44,7 +44,7 @@ router.post("/login", async (req, res) => {
   if (!username || !password)
     return handleReturn(res, 401, "Missing fields", false);
   try {
-    const existUser = await User.findOne({ username });
+    const existUser = await User.findOne({ username }, { fullname: 1 });
     if (!existUser)
       return handleReturn(
         res,
@@ -64,7 +64,10 @@ router.post("/login", async (req, res) => {
       process.env.SECRET_TOKEN
     );
 
-    return handleReturn(res, 200, "Login successfully", true, accessToken);
+    return handleReturn(res, 200, "Login successfully", true, {
+      token: accessToken,
+      fullname: existUser.fullname,
+    });
   } catch (err) {
     return handleReturn(res, 500, "Internal server error: " + err);
   }
