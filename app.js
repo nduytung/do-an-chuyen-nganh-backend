@@ -6,13 +6,13 @@ var logger = require("morgan");
 const cors = require("cors");
 const authRouter = require("./routes/auth");
 const projectRouter = require("./routes/project");
+const imageRouter = require("./routes/image");
 const usersRouter = require("./routes/user");
 const connectDB = require("./asyncFunctions/connectDB");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-
+var bodyParser = require("body-parser");
 var app = express();
-
 const swaggerOptions = {
   swaggerDefinition: {
     info: {
@@ -28,6 +28,14 @@ const swaggerOptions = {
   apis: ["app.js", "./routes/project.js"],
 };
 
+app.use(bodyParser.json({ limit: "150mb" }));
+app.use(
+  bodyParser.urlencoded({
+    // to support URL-encoded bodies
+    limit: "150mb",
+    extended: true,
+  })
+);
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
@@ -42,10 +50,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
-
 app.use("/project", projectRouter);
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
+app.use("/image", imageRouter);
 app.use("/", (req, res) => {
   res.send("Hello, this is our backend - overwritten by Duy Tung");
 });

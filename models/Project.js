@@ -14,15 +14,21 @@ const ProjectSchema = new Schema({
     required: true,
   },
 
+  //nhung noi dung ma nguoi tao project muon nguoi khac comment
+  researchDetail: {
+    type: String,
+    default: "",
+  },
+
   //tong so tien keu goi
   goal: {
-    type: Number,
-    required: true,
+    type: Number || String,
+    default: 0,
   },
   //so tien da keu goi dc
   raised: {
     type: Number,
-    required: true,
+    default: 0,
   },
   //so nguoi quyen gop, so tien quyen gop
   backer: [
@@ -41,10 +47,7 @@ const ProjectSchema = new Schema({
       },
     },
   ],
-  daysLeft: {
-    type: Date,
-    required: true,
-  },
+
   shortStory: {
     type: String,
     required: true,
@@ -60,12 +63,11 @@ const ProjectSchema = new Schema({
 
   //star rate se duoc tinh trung binh boi comment
 
-  image: [
-    {
-      type: String,
-      required: true,
-    },
-  ],
+  image: {
+    type: String,
+    required: true,
+  },
+
   category: {
     type: String,
     required: true,

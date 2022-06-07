@@ -41,6 +41,11 @@ const UserSchema = new Schema({
     default: 3000,
   },
 
+  spent: {
+    type: Number,
+    default: 0,
+  },
+
   //react cua user doi voi tung post
   react: {
     upvote: [

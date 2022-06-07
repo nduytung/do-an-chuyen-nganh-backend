@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const handleReturn = require("../asyncFunctions/utilFunctions");
 const userAuthenticate = require("../middlewares/auth.middleware");
+const Image = require("../models/Image");
 const Project = require("../models/Project");
 const Reward = require("../models/Reward");
 const User = require("../models/User");
@@ -22,11 +23,14 @@ router.get("/all", async (req, res) => {
     const projects = await Project.find(
       {},
       {
+        _id: 1,
         projectName: 1,
-        userId: 1,
-        daysLeft: 1,
+        date: 1,
         image: 1,
         category: 1,
+        type: 1,
+        goal: 1,
+        raised: 1,
       }
     );
     if (!projects) return handleReturn(res, 404, "No project found", false);
@@ -45,36 +49,57 @@ router.get("/all", async (req, res) => {
 
 router.post("/create", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  const {
-    projectName,
-    type,
-    goal,
-    raised,
-    daysLeft,
-    shortStory,
-    authorId,
-    fullStory,
-    image,
-    category,
-    date,
-  } = req.body;
+  console.log(req.body);
+  const { projectName, type, fullStory, shortStory, category, image } =
+    req.body;
+  if (!projectName || !type || !fullStory || !shortStory || !category || !image)
+    return handleReturn(res, 403, "Bad request: Missing fields");
 
-  if (type == "")
-    return handleReturn(res, 403, "Bad request: type must be vote or raise");
   try {
     //tim xem co bi trung ten khong
     const projectExists = await Project.findOne({ projectName });
     if (projectExists)
       return handleReturn(
         res,
-        403,
+        401,
         "Project name already exists, please try another name"
       );
+
+    //gui anh len server
+    try {
+      const postImage = new Image({ imageUrl: image });
+      await postImage.save();
+      console.log(postImage);
+    } catch (err) {
+      return handleReturn(
+        res,
+        500,
+        "Internal server error: Unable to send image to server, please try again later"
+      );
+    }
+
+    if (type === "donate") {
+      const { goal } = req.body;
+      if (!goal)
+        return handleReturn(
+          res,
+          403,
+          "Bad request: Donate projects must include target money amount"
+        );
+    } else if (type === "research") {
+      const { researchDetail } = req.body;
+      if (!researchDetail)
+        return handleReturn(
+          res,
+          403,
+          "Bad request: Research projects must include research target"
+        );
+    }
 
     //neu khong trung ten thi cho tao va luu lai
     const newProject = await new Project({
       ...req.body,
-      userId,
+      authorId: userId,
     });
 
     await newProject.save();
@@ -121,15 +146,14 @@ router.put("/update", userAuthenticate, async (req, res) => {
   }
 });
 
-router.delete("/delete", userAuthenticate, async (req, res) => {
+router.delete("/delete/:id", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  const { projectId } = req.body;
-  if (!userId || !projectId)
-    return handleReturn(res, 400, "Forbidden: please login");
+  const { id } = req.params;
+  if (!userId || !id) return handleReturn(res, 400, "Forbidden: please login");
 
   //check project owner
   const projectOwner = await Project.findOne({
-    $and: [{ _id: projectId }, { userId }],
+    $and: [{ _id: id }, { userId }],
   });
   if (!projectOwner)
     return handleReturn(
@@ -139,7 +163,7 @@ router.delete("/delete", userAuthenticate, async (req, res) => {
     );
 
   try {
-    const deleteProject = await Project.findOneAndDelete({ _id: projectId });
+    const deleteProject = await Project.findOneAndDelete({ _id: id });
     if (!deleteProject)
       return handleReturn(res, 404, "Project not found to be deleted!");
     return handleReturn(res, 200, "Delete project successfully", true);
@@ -169,6 +193,9 @@ router.get(`/detail/:id`, async (req, res) => {
         category: 1,
         date: 1,
         upvote: 1,
+        backer: 1,
+        image: 1,
+        researchDetail: 1,
       }
     );
     if (!checkExists) return handleReturn(res, 404, "Project ID not found");

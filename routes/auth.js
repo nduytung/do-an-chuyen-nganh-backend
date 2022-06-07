@@ -76,6 +76,7 @@ router.post("/login", async (req, res) => {
       token: accessToken,
       fullname: existUser.fullname,
       username: existUser.username,
+      _id: existUser._id,
     });
   } catch (err) {
     return handleReturn(res, 500, "Internal server error: " + err);

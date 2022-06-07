@@ -15,12 +15,28 @@ router.get("/info/:id", async (req, res) => {
   try {
     const userInfo = await User.findOne(
       { _id: id },
-      { username: 1, fullname: 1, email: 1, avt: 1, rewardList: 1 }
+      {
+        _id: 1,
+        username: 1,
+        fullname: 1,
+        email: 1,
+        avt: 1,
+        rewardList: 1,
+        accountBalance: 1,
+        spent: 1,
+      }
     );
 
+    const userProject = await Project.find(
+      { authorId: id },
+      { projectName: 1, raised: 1, goal: 1, date: 1, category: 1, image: 1 }
+    );
     if (!userInfo) return handleReturn(res, 404, "User profile not found");
 
-    return handleReturn(res, 200, "Get user info successfully", true, userInfo);
+    return handleReturn(res, 200, "Get user info successfully", true, {
+      info: userInfo,
+      projectList: userProject,
+    });
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
