@@ -594,19 +594,27 @@ router.post("/add/remind-list", userAuthenticate, async (req, res) => {
 });
 
 router.post("/momo-trigger", async (req, res) => {
-  const data = await Momo();
-  console.log("-------------------------------------------------");
+  const { orderInfo, amount } = req.body;
+  if (!orderInfo || !amount)
+    return handleReturn(
+      res,
+      403,
+      "Bad request: missing either order info or payment amount"
+    );
+  const data = await Momo(orderInfo, amount * 1000);
   console.log(data);
   if (data.payUrl)
     return handleReturn(res, 200, "Trigger momo API successfully", true, {
       payUrl: data.payUrl,
     });
-  else
+  else {
+    console.log(data);
     return handleReturn(
       res,
       500,
       `Internal server error: Cannot start momo API`
     );
+  }
 });
 
 router.post("/momo-payment", async (req, res) => {
