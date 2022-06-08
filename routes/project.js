@@ -6,6 +6,7 @@ const Image = require("../models/Image");
 const Project = require("../models/Project");
 const Reward = require("../models/Reward");
 const User = require("../models/User");
+const { Momo } = require("./momo");
 
 /**
  * @swagger
@@ -590,6 +591,27 @@ router.post("/add/remind-list", userAuthenticate, async (req, res) => {
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
+});
+
+router.post("/momo-trigger", async (req, res) => {
+  const data = await Momo();
+  console.log("-------------------------------------------------");
+  console.log(data);
+  if (data.payUrl)
+    return handleReturn(res, 200, "Trigger momo API successfully", true, {
+      payUrl: data.payUrl,
+    });
+  else
+    return handleReturn(
+      res,
+      500,
+      `Internal server error: Cannot start momo API`
+    );
+});
+
+router.post("/momo-payment", async (req, res) => {
+  console.log("momo triggered !");
+  console.log(req.body);
 });
 
 module.exports = router;
