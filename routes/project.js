@@ -217,9 +217,10 @@ router.get(`/detail/:id`, async (req, res) => {
 //donate project
 router.put(`/donate`, userAuthenticate, async (req, res) => {
   const { userId } = req;
-  const { id } = req.body;
+  const { projectId, raisedAmount } = req.body;
 
-  if (!userId || !id) return handleReturn(res, 403, "Forbidden: please login");
+  if (!userId || !projectId)
+    return handleReturn(res, 403, "Forbidden: please login");
 
   const { donateAmount } = req.body;
   if (!donateAmount)
@@ -227,90 +228,87 @@ router.put(`/donate`, userAuthenticate, async (req, res) => {
 
   try {
     const checkExists = await Project.findOneAndUpdate(
-      { _id: id },
+      { _id: projectId },
       {
-        $inc: {
-          raised: parseInt(donateAmount),
-        },
+        raised: parseInt(raisedAmount) + parseInt(donateAmount),
       }
     );
     if (!checkExists) return handleReturn(res, 404, "Project not found");
 
-    await checkExists.save();
+    // //neu DA UPDATE THANH CONG:
+    // /*
+    // - check xem co du tien de nhan item nao chua
+    // - check xem item do con quantity khong
+    // - them item do vao trong tui do cua user (rewardList)
+    // - xoa bot mot quantity
+    // - tang so nguoi duoc nhan item do len trong Reward
+    // - giam so tien con lai cua nguoi nay di
+    // */
 
-    //neu DA UPDATE THANH CONG:
-    /*
-    - check xem co du tien de nhan item nao chua 
-    - check xem item do con quantity khong 
-    - them item do vao trong tui do cua user (rewardList)
-    - xoa bot mot quantity 
-    - tang so nguoi duoc nhan item do len trong Reward 
-    - giam so tien con lai cua nguoi nay di 
-    */
+    // //kiem item xem cai nao thoa dieu kien, va lieu con hang khong
+    // const findReceivedItem = await Reward.find({
+    //   $and: [
+    //     {
+    //       projectId: projectId,
+    //     },
+    //     {
+    //       minimumPrice: { $lt: donateAmount },
+    //     },
+    //     {
+    //       quantity: { $gt: 0 },
+    //     },
+    //   ],
+    // })
+    //   .sort({ minimumPrice: -1 })
+    //   .limit(1);
 
-    //kiem item xem cai nao thoa dieu kien, va lieu con hang khong
-    const findReceivedItem = await Reward.find({
-      $and: [
-        {
-          projectId: id,
-        },
-        {
-          minimumPrice: { $lt: donateAmount },
-        },
-        {
-          quantity: { $gt: 0 },
-        },
-      ],
-    })
-      .sort({ minimumPrice: -1 })
-      .limit(1);
+    // //neu nhu du tien de nhan item va item do con hang
+    // if (findReceivedItem === true) {
+    //   try {
+    //     //them vao items list va tru di tien trong tai khoan
+    //     const updateUserItems = await User.findOneAndUpdate(
+    //       { _id: userId },
+    //       {
+    //         $push: {
+    //           rewardList: {
+    //             rewardId: findReceivedItem._id,
+    //           },
+    //         },
+    //         $inc: {
+    //           accountBalance: -donateAmount,
+    //         },
+    //       }
+    //     );
+    //     await updateUserItems.save();
 
-    //neu nhu du tien de nhan item va item do con hang
-    if (findReceivedItem === true) {
-      try {
-        //them vao items list va tru di tien trong tai khoan
-        const updateUserItems = await User.findOneAndUpdate(
-          { _id: userId },
-          {
-            $push: {
-              rewardList: {
-                rewardId: findReceivedItem._id,
-              },
-            },
-            $inc: {
-              accountBalance: -donateAmount,
-            },
-          }
-        );
-        await updateUserItems.save();
+    //     //tru di so luong va tang them so nguoi da nhan duoc items
+    //     if (updateUserItems) {
+    //       const updateRewardAtt = await Reward.findOneAndUpdate(
+    //         { _id: findReceivedItem._id },
+    //         {
+    //           $inc: {
+    //             quantity: -1,
+    //             backers: 1,
+    //           },
+    //         }
+    //       );
+    //       await updateRewardAtt.save();
+    //     }
 
-        //tru di so luong va tang them so nguoi da nhan duoc items
-        if (updateUserItems) {
-          const updateRewardAtt = await Reward.findOneAndUpdate(
-            { _id: findReceivedItem._id },
-            {
-              $inc: {
-                quantity: -1,
-                backers: 1,
-              },
-            }
-          );
-          await updateRewardAtt.save();
-        }
+    //     //tra ve ket qua neu co items de tang
+    //     return handleReturn(res, 200, "Donate successfully with item", true);
+    //   } catch (err) {
+    //     return handleReturn(res, 403, `Something happened: ${err}`);
+    //   }
 
-        //tra ve ket qua neu co items de tang
-        return handleReturn(res, 200, "Donate successfully with item", true);
-      } catch (err) {
-        return handleReturn(res, 403, `Something happened: ${err}`);
-      }
-
-      //neu nhu khong con item de tang
-    }
+    //   //neu nhu khong con item de tang
+    // }
     return handleReturn(
       res,
       200,
       "Donate successfully, but no items left",
-      true
+      true,
+      checkExists
     );
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
@@ -620,6 +618,37 @@ router.post("/momo-trigger", async (req, res) => {
 router.post("/momo-payment", async (req, res) => {
   console.log("momo triggered !");
   console.log(req.body);
+});
+
+router.put("/update-backer", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  const { name, amount, date, projectId } = req.body;
+  if (!name || !amount || !date || !projectId)
+    return handleReturn(res, 403, "Bad request: missing fields");
+
+  try {
+    const updateBackerList = await Project.findOneAndUpdate(
+      {
+        _id: projectId,
+      },
+      {
+        $push: {
+          backer: {
+            name: name,
+            amount: amount,
+            date: date,
+          },
+        },
+      }
+    );
+
+    if (!updateBackerList)
+      return handleReturn(res, 404, "Project ID not found, please try again");
+
+    return handleReturn(res, 200, "Update backer list successfully!", true);
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
 });
 
 module.exports = router;

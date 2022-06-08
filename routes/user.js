@@ -156,8 +156,8 @@ router.get("/remind-list", userAuthenticate, async (req, res) => {
 
 router.post("/notify", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  const { backerName, projectName, moneyAmount } = req.body;
-  if (!backerName || !projectName || !moneyAmount)
+  const { backerName, projectName, moneyAmount, balance } = req.body;
+  if (!backerName || !projectName || !moneyAmount || !balance)
     return handleReturn(
       res,
       403,
@@ -175,12 +175,16 @@ router.post("/notify", userAuthenticate, async (req, res) => {
             moneyAmount: moneyAmount,
           },
         },
+        accountBalance: parseInt(balance) - parseInt(moneyAmount),
       }
     );
+    console.log(profileUser);
     if (!profileUser)
       return handleReturn(res, 404, "User profile not found, please try again");
 
-    return handleReturn(res, 200, "Push notification successfully", true);
+    return handleReturn(res, 200, "Push notification successfully", true, {
+      profileUser,
+    });
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }
