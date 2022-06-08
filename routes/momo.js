@@ -11,6 +11,7 @@ const requestType = "captureWallet";
 const extraData = "";
 
 const Momo = (orderInfo, amount) => {
+  console.log(amount);
   const rawSignature =
     "accessKey=" +
     accessKey +

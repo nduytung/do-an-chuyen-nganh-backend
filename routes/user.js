@@ -154,4 +154,56 @@ router.get("/remind-list", userAuthenticate, async (req, res) => {
   }
 });
 
+router.post("/notify", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  const { backerName, projectName, moneyAmount } = req.body;
+  if (!backerName || !projectName || !moneyAmount)
+    return handleReturn(
+      res,
+      403,
+      "Bad request: missing field - cannot notify right now"
+    );
+
+  try {
+    const profileUser = await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $push: {
+          noti: {
+            backerName: backerName,
+            projectName: projectName,
+            moneyAmount: moneyAmount,
+          },
+        },
+      }
+    );
+    if (!profileUser)
+      return handleReturn(res, 404, "User profile not found, please try again");
+
+    return handleReturn(res, 200, "Push notification successfully", true);
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+router.get("/noti-list", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+  try {
+    const userNotiList = await User.findOne({ _id: userId }, { noti: 1 });
+
+    if (!userNotiList)
+      return handleReturn(
+        res,
+        404,
+        "User noti list not found or user doesnt have any noti yet"
+      );
+
+    return handleReturn(res, 200, "Get user noti list successfully", {
+      notiList: userNotiList.noti,
+    });
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
+
 module.exports = router;

@@ -87,6 +87,22 @@ const UserSchema = new Schema({
       },
     },
   ],
+  noti: [
+    {
+      backerName: {
+        type: String,
+        required: true,
+      },
+      projectName: {
+        type: String,
+        required: true,
+      },
+      moneyAmount: {
+        type: Number | String,
+        default: 0,
+      },
+    },
+  ],
 });
 
 UserSchema.plugin(uniqueValidator);
