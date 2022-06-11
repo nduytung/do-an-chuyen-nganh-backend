@@ -181,25 +181,7 @@ router.get(`/detail/:id`, async (req, res) => {
     return handleReturn(res, 400, "Bad request: please provide project id");
 
   try {
-    const checkExists = await Project.findOne(
-      { _id: id },
-      {
-        projectName: 1,
-        type: 1,
-        authorId: 1,
-        goal: 1,
-        raised: 1,
-        daysLeft: 1,
-        shortStory: 1,
-        fullStory: 1,
-        category: 1,
-        date: 1,
-        upvote: 1,
-        backer: 1,
-        image: 1,
-        researchDetail: 1,
-      }
-    );
+    const checkExists = await Project.findOne({ _id: id });
     if (!checkExists) return handleReturn(res, 404, "Project ID not found");
 
     //neu tim thay
@@ -459,40 +441,35 @@ router.get("/comment/all/:projectId", async (req, res) => {
 });
 
 //update tien do project
-router.post("/update/progress", userAuthenticate, async (req, res) => {
+router.put("/update/progress", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  if (!userId) return handleReturn(res, 403, "User id not found");
+  if (!userId) return handleReturn(res, 401, "User id not found");
 
-  const { title, content, projectId } = req.body;
-  if (!title || !content || !projectId)
-    return handleReturn(res, 401, "Missing fields");
+  const { title, content, projectId, date } = req.body;
+  console.log(req.body);
+  if (!title || !content || !projectId || !date)
+    return handleReturn(res, 403, "Missing fields");
 
   try {
     //kiem tra xem nguoi dung nay co pahi chu project khong
     //kiem tra xem project nay co ton tai khong
     const updateProject = await Project.findOneAndUpdate(
       {
-        $and: [
-          {
-            userId,
-          },
-          {
-            _id: projectId,
-          },
-        ],
+        authorId: userId,
+        _id: projectId,
       },
       {
         $push: {
           updatePath: {
             title,
             content,
-            time: new Date("<YYYY-mm-dd>"),
+            time: date,
           },
         },
       }
     );
 
-    await updateProject.save();
+    console.log(updateProject);
 
     if (!updateProject)
       return handleReturn(
