@@ -32,6 +32,7 @@ router.get("/all", async (req, res) => {
         type: 1,
         goal: 1,
         raised: 1,
+        authorId: 1,
       }
     );
     if (!projects) return handleReturn(res, 404, "No project found", false);
@@ -646,6 +647,55 @@ router.put("/update-backer", userAuthenticate, async (req, res) => {
       return handleReturn(res, 404, "Project ID not found, please try again");
 
     return handleReturn(res, 200, "Update backer list successfully!", true);
+  } catch (err) {
+    return handleReturn(res, 500, `Internal server error: ${err}`);
+  }
+});
+
+router.get("/donated-project", userAuthenticate, async (req, res) => {
+  const { userId } = req;
+
+  try {
+    //find the username first
+
+    const fullname = await User.findOne(
+      { _id: userId },
+      { fullname: 1, _id: 0 }
+    );
+
+    if (!fullname)
+      return handleReturn(
+        res,
+        404,
+        "User id not found, please try again later"
+      );
+
+    const donatedList = await Project.find(
+      {
+        backer: {
+          $elemMatch: {
+            name: fullname.fullname,
+          },
+        },
+      },
+      {
+        _id: 1,
+        projectName: 1,
+        date: 1,
+        image: 1,
+        category: 1,
+        type: 1,
+        goal: 1,
+        raised: 1,
+        authorId: 1,
+      }
+    );
+
+    if (!donatedList) return handleReturn(res, 404, "No donated project found");
+
+    return handleReturn(res, 200, "Get donated list successfully", true, {
+      donatedList,
+    });
   } catch (err) {
     return handleReturn(res, 500, `Internal server error: ${err}`);
   }

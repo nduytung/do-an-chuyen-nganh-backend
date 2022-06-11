@@ -156,8 +156,9 @@ router.get("/remind-list", userAuthenticate, async (req, res) => {
 
 router.post("/notify", userAuthenticate, async (req, res) => {
   const { userId } = req;
-  const { backerName, projectName, moneyAmount, balance } = req.body;
-  if (!backerName || !projectName || !moneyAmount || !balance)
+  const { projectName, moneyAmount, ownerId } = req.body;
+  console.log("money: " + moneyAmount);
+  if (!projectName || !moneyAmount || !ownerId)
     return handleReturn(
       res,
       403,
@@ -165,17 +166,21 @@ router.post("/notify", userAuthenticate, async (req, res) => {
     );
 
   try {
-    const profileUser = await User.findOneAndUpdate(
+    const backerInfo = await User.findOneAndUpdate(
       { _id: userId },
+      { $inc: { balance: -moneyAmount } }
+    );
+
+    const profileUser = await User.findOneAndUpdate(
+      { _id: ownerId },
       {
         $push: {
           noti: {
-            backerName: backerName,
-            projectName: projectName,
+            backerName: backerInfo.fullname,
             moneyAmount: moneyAmount,
+            projectName: projectName,
           },
         },
-        accountBalance: parseInt(balance) - parseInt(moneyAmount),
       }
     );
     console.log(profileUser);
@@ -202,7 +207,7 @@ router.get("/noti-list", userAuthenticate, async (req, res) => {
         "User noti list not found or user doesnt have any noti yet"
       );
 
-    return handleReturn(res, 200, "Get user noti list successfully", {
+    return handleReturn(res, 200, "Get user noti list successfully", true, {
       notiList: userNotiList.noti,
     });
   } catch (err) {

@@ -98,7 +98,7 @@ const UserSchema = new Schema({
         required: true,
       },
       moneyAmount: {
-        type: Number | String,
+        type: Number || String,
         default: 0,
       },
     },
