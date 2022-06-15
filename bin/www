@@ -30,11 +30,16 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
+  socket.removeAllListeners();
   console.log("user connected");
+  let tempData = null;
   socket.on("on-chat", (data) => {
-    //emit means broadcast the chat data to the whole network
-    console.log("received");
-    io.emit("user-chat", data);
+    if (tempData !== data.message) {
+      io.emit("user-chat", data);
+      console.log("emitted");
+      tempData = data.message;
+      return;
+    } else return;
   });
 });
 /**
